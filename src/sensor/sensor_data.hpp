@@ -6,8 +6,8 @@
 #include "env_data_type.hpp"
 
 class sensor_data {
-	float data;
 	environmental_data::type type;
+	float data;
 
 public:
 	sensor_data(environmental_data::type type, float data = 0.0) :
@@ -34,7 +34,7 @@ public:
 		return environmental_data::type_info_map.at(type).unit;
 	}
 
-	const uint8_t get_id() const
+	uint8_t get_id() const
 	{
 		return environmental_data::type_info_map.at(type).id;
 	}
