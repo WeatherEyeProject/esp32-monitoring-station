@@ -3,11 +3,14 @@
 #include <string>
 #include <driver/uart.h>
 
+namespace pms7003_internal
+{
 namespace constant
 {
 const std::string sensor_name("PMS7003");
 
 const uint16_t start_sequence = 0x424d;
+const uint8_t data_packet_frame_length = 28;
 
 const uint8_t cmd_read_in_passive_mode = 0xe2;
 const uint8_t cmd_change_mode = 0xe1;
@@ -28,8 +31,9 @@ const uart_config_t uart_config = {
 	.data_bits = UART_DATA_8_BITS,
 	.parity = UART_PARITY_DISABLE,
 	.stop_bits = UART_STOP_BITS_1,
-	.flow_ctrl = UART_HW_FLOWCTRL_CTS_RTS,
-	.rx_flow_ctrl_thresh = 122,
+	.flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+	.rx_flow_ctrl_thresh = 0,
+	.source_clk = uart_sclk_t::UART_SCLK_DEFAULT
 };
 
 }
@@ -77,3 +81,4 @@ union host_command {
 
 	uint8_t raw[7];
 };
+}

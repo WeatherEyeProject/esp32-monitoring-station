@@ -1,12 +1,19 @@
 #pragma once
 
 #include <vector>
+#include <optional>
+
+#include <driver/uart.h>
 
 #include <sensor/sensor.hpp>
 
-class pms7003 : sensor
+#include "pms7003_defs.hpp"
+
+class pms7003: sensor
 {
 public:
+	pms7003();
+
 	bool init_sensor() override;
 	bool wakeup() override;
 	bool suspend() override;
@@ -14,5 +21,13 @@ public:
 	sensor_data_list read_data() override;
 
 private:
+	QueueHandle_t uart_queue;
+	bool sensor_suspended;
 
+	std::optional<pms7003_internal::data_packet> get_sensor_data() const;
+	bool send_host_command(const uint8_t command, const uint16_t data = 0x0000) const;
+	void fix_uart_endianess(uint8_t* data, const size_t size) const;
+	bool check_data_packet(const pms7003_internal::data_packet& packet) const;
+	bool verify_data_packet_checksum(const pms7003_internal::data_packet& packet) const;
+	void wait_for_response_after_cmd();
 };
