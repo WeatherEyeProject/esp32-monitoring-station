@@ -11,6 +11,16 @@ const uint8_t sensors_i2c_scl_gpio = 22;
 const uint8_t i2c_port_num = 0;
 const unsigned ticks_timeout = 100;
 const uint32_t i2c_speed = 100'000;
+
+const i2c_config_t i2c_conf = {
+	.mode = I2C_MODE_MASTER,
+	.sda_io_num = sensors_i2c_sda_gpio,
+	.scl_io_num = sensors_i2c_scl_gpio,
+	.sda_pullup_en = GPIO_PULLUP_ENABLE,
+	.scl_pullup_en = GPIO_PULLUP_ENABLE,
+	.master = {.clk_speed = i2c_speed},
+	.clk_flags = 0,
+};
 }
 
 sensors_i2c_bus_ptr sensors_i2c_bus::instance;
@@ -26,6 +36,7 @@ sensors_i2c_bus_ptr sensors_i2c_bus::get_instance()
 }
 
 sensors_i2c_bus::sensors_i2c_bus()
+	: bus_ready(false)
 { }
 
 sensors_i2c_bus::~sensors_i2c_bus()
@@ -35,17 +46,10 @@ sensors_i2c_bus::~sensors_i2c_bus()
 
 bool sensors_i2c_bus::init_bus()
 {
-	i2c_config_t i2c_conf = {
-		.mode = I2C_MODE_MASTER,
-		.sda_io_num = constant::sensors_i2c_sda_gpio,
-		.scl_io_num = constant::sensors_i2c_scl_gpio,
-		.sda_pullup_en = GPIO_PULLUP_ENABLE,
-		.scl_pullup_en = GPIO_PULLUP_ENABLE,
-		.master = {.clk_speed = constant::i2c_speed},
-		.clk_flags = 0,
-	};
+	if (bus_ready)
+		return true;
 
-	bool result = i2c_param_config(constant::i2c_port_num, &i2c_conf);
+	bool result = i2c_param_config(constant::i2c_port_num, &constant::i2c_conf);
 	if (result != ESP_OK) {
 		std::cout << "I2C param config error!" << std::endl;
 		return false;
@@ -62,10 +66,10 @@ bool sensors_i2c_bus::init_bus()
 	return true;
 }
 
-uint8_t sensors_i2c_bus::i2c_read(const uint8_t dev_addr, const uint8_t mem_addr)
+std::optional<uint8_t> sensors_i2c_bus::i2c_read(const uint8_t dev_addr, const uint8_t mem_addr)
 {
 	if (!bus_ready) {
-		return 0;
+		return std::nullopt;
 	}
 
 	auto cmd_handle = i2c_cmd_link_create();
@@ -87,13 +91,13 @@ uint8_t sensors_i2c_bus::i2c_read(const uint8_t dev_addr, const uint8_t mem_addr
 		return data;
 
 	std::cout << "I2C read error!" << std::endl;
-	return 0;
+	return std::nullopt;
 }
 
-std::vector<uint8_t> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t mem_addr, uint32_t bytes)
+std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t mem_addr, uint32_t bytes)
 {
 	if (!bus_ready) {
-		return {};
+		return std::nullopt;
 	}
 
 	std::vector<uint8_t> data(bytes);
@@ -116,7 +120,7 @@ std::vector<uint8_t> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, con
 		return data;
 
 	std::cout << "I2C read error!" << std::endl;
-	return {};
+	return std::nullopt;
 }
 
 bool sensors_i2c_bus::i2c_write_byte(const uint8_t dev_addr, const uint8_t mem_addr, const uint8_t data)
