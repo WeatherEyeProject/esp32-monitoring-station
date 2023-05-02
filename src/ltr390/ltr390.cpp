@@ -109,16 +109,18 @@ std::optional<uint32_t> ltr390::get_meas_from_sensor(const uint8_t sensor_mode, 
 		return ret;
 	}
 
-	uint32_t be_data = 0;
+	// Data is stored in three registers from LSB to MSB
+	// Shift data to uin32_t starting from 3'rd byte
+	uint32_t data = 0;
 	for (uint8_t reg = first_data_reg; reg < first_data_reg + 3; reg++) {
 		auto reg_data = i2c_read(reg);
 		if (!reg_data)
 			return std::nullopt;
-		be_data >>= 8;
-		be_data |= *reg_data << 16;
+		data >>= 8;
+		data |= *reg_data << 16;
 	}
 
-	return be_data;
+	return data;
 }
 
 sensor_data_list ltr390::read_data()
@@ -212,7 +214,9 @@ std::optional<float> ltr390::get_calculated_lux_from_sensor()
 		std::cout << "Sensor out of range, lowering gain..." << std::endl;
 	}
 
-	return calculate_lux_from_raw(*als);
+	auto lux = calculate_lux_from_raw(*als);
+
+	return std::round(lux * 10) / 10;
 }
 
 std::optional<float> ltr390::get_calculated_uvi_from_sensor()
