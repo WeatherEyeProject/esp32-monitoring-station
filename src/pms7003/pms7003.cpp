@@ -13,8 +13,14 @@ const int uart_rx_buffer_size = (128 * 2);
 }
 
 pms7003::pms7003()
-	: sensor_suspended(false)
+	: sensor_suspended(false),
+	sensor_ready(false)
 { }
+
+pms7003::~pms7003()
+{
+	uart_driver_delete(constant::uart_num);
+}
 
 std::string pms7003::get_name() const
 {
@@ -47,14 +53,21 @@ bool pms7003::init_sensor()
 		std::cout << "Passive mode set error" << std::endl;
 		return false;
 	}
-
 	wait_for_response_after_cmd();
+
+	suspend();
+
+	sensor_ready = true;
 
 	return true;
 }
 
 sensor_data_list pms7003::read_data()
 {
+	if (!sensor_ready) {
+		return {};
+	}
+
 	if (sensor_suspended) {
 		std::cout << "Trying to read data when sensor suspended" << std::endl;
 		return {};
@@ -99,6 +112,10 @@ bool pms7003::send_host_command(const uint8_t command, const uint16_t data) cons
 
 bool pms7003::suspend()
 {
+	if (!sensor_ready) {
+		return false;
+	}
+
 	if (sensor_suspended) {
 		return true;
 	}
@@ -116,6 +133,10 @@ bool pms7003::suspend()
 
 bool pms7003::wakeup()
 {
+	if (!sensor_ready) {
+		return false;
+	}
+
 	if (!sensor_suspended) {
 		return true;
 	}
@@ -143,7 +164,7 @@ std::optional<data_packet> pms7003::get_sensor_data() const
 		return std::nullopt;
 	}
 
-	fix_uart_endianess(data.raw, sizeof(data_packet));
+	fix_uint16_endianess(data.raw, sizeof(data_packet));
 
 	if (!check_data_packet(data)) {
 		return std::nullopt;
@@ -152,7 +173,7 @@ std::optional<data_packet> pms7003::get_sensor_data() const
 	return data;
 }
 
-void pms7003::fix_uart_endianess(uint8_t* data, const size_t size) const
+void pms7003::fix_uint16_endianess(uint8_t* data, const size_t size) const
 {
 	for (size_t i = 0; i < size; i += 2) {
 		std::swap(data[i], data[i + 1]);
