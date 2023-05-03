@@ -62,7 +62,6 @@ sensor_data_list pms7003::read_data()
 	}
 
 	if (sensor_suspended) {
-		std::cout << "Trying to read data when sensor suspended" << std::endl;
 		return {};
 	}
 
