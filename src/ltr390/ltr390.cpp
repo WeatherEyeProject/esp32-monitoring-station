@@ -258,7 +258,7 @@ std::optional<std::vector<uint8_t>> ltr390::i2c_read(const uint8_t reg, const ui
 
 bool ltr390::i2c_write(const uint8_t reg, const uint8_t data)
 {
-	return i2c_dev->i2c_write_byte(constant::i2c_address, reg, data);
+	return i2c_dev->i2c_write(constant::i2c_address, reg, data);
 }
 
 std::optional<uint8_t> ltr390::i2c_read(const uint8_t reg)

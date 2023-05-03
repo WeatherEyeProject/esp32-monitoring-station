@@ -28,7 +28,7 @@ sensors_i2c_bus_ptr sensors_i2c_bus::instance;
 sensors_i2c_bus_ptr sensors_i2c_bus::get_instance()
 {
 	if (!instance) {
-		class public_cstor: public sensors_i2c_bus {};
+		class public_cstor : public sensors_i2c_bus {};
 		instance = std::make_shared<public_cstor>();
 	}
 
@@ -94,7 +94,7 @@ std::optional<uint8_t> sensors_i2c_bus::i2c_read(const uint8_t dev_addr, const u
 	return std::nullopt;
 }
 
-std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t mem_addr, uint32_t bytes)
+std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t mem_addr, const uint32_t bytes)
 {
 	if (!bus_ready) {
 		return std::nullopt;
@@ -123,7 +123,7 @@ std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_
 	return std::nullopt;
 }
 
-bool sensors_i2c_bus::i2c_write_byte(const uint8_t dev_addr, const uint8_t mem_addr, const uint8_t data)
+bool sensors_i2c_bus::i2c_write(const uint8_t dev_addr, const uint8_t mem_addr, const uint8_t data)
 {
 	if (!bus_ready) {
 		return false;
@@ -135,6 +135,32 @@ bool sensors_i2c_bus::i2c_write_byte(const uint8_t dev_addr, const uint8_t mem_a
 	i2c_master_write_byte(cmd_handle, dev_addr, true);
 	i2c_master_write_byte(cmd_handle, mem_addr, true);
 	i2c_master_write_byte(cmd_handle, data, true);
+	i2c_master_stop(cmd_handle);
+
+	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout) == ESP_OK;
+
+	i2c_cmd_link_delete(cmd_handle);
+
+	if (!ret) {
+		std::cout << "I2C write error!" << std::endl;
+	}
+	return ret;
+}
+
+bool sensors_i2c_bus::i2c_write_bytes(const uint8_t dev_addr, const uint8_t mem_addr, const uint8_t* data, const uint32_t bytes)
+{
+	if (!bus_ready) {
+		return false;
+	}
+
+	auto cmd_handle = i2c_cmd_link_create();
+
+	i2c_master_start(cmd_handle);
+	i2c_master_write_byte(cmd_handle, dev_addr, true);
+	for (uint32_t i = 0; i < bytes; i++) {
+		i2c_master_write_byte(cmd_handle, mem_addr + i, true);
+		i2c_master_write_byte(cmd_handle, data[i], true);
+	}
 	i2c_master_stop(cmd_handle);
 
 	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout) == ESP_OK;
