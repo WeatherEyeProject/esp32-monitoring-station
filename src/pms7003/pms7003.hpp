@@ -9,7 +9,7 @@
 
 #include "pms7003_defs.hpp"
 
-class pms7003: sensor
+class pms7003 : sensor
 {
 public:
 	pms7003();
@@ -32,4 +32,5 @@ private:
 	bool check_data_packet(const pms7003_internal::data_packet& packet) const;
 	bool verify_data_packet_checksum(const pms7003_internal::data_packet& packet) const;
 	void wait_for_response_after_cmd();
+	bool sensor_set_passive_mode();
 };

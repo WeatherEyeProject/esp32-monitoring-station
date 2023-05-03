@@ -13,8 +13,8 @@ const int uart_rx_buffer_size = (128 * 2);
 }
 
 pms7003::pms7003()
-	: sensor_suspended(false),
-	sensor_ready(false)
+	: sensor_ready(false),
+	sensor_suspended(false)
 { }
 
 pms7003::~pms7003()
@@ -48,16 +48,9 @@ bool pms7003::init_sensor()
 		return false;
 	}
 
-	ret = send_host_command(constant::cmd_change_mode, constant::data_passive_mode);
-	if (ret != true) {
-		std::cout << "Passive mode set error" << std::endl;
-		return false;
-	}
-	wait_for_response_after_cmd();
+	sensor_ready = true;
 
 	suspend();
-
-	sensor_ready = true;
 
 	return true;
 }
@@ -143,13 +136,31 @@ bool pms7003::wakeup()
 
 	std::cout << "PMS7003 waking up..." << std::endl;
 	auto ret = send_host_command(constant::cmd_sleep_set, constant::data_wakeup_set);
-	if (ret)
-		sensor_suspended = false;
+	if (!ret)
+		return ret;
 
+	sensor_suspended = false;
 	wait_for_response_after_cmd();
+
+	ret = sensor_set_passive_mode();
+	if (!ret)
+		return ret;
+
 	std::cout << "Ok" << std::endl;
 
 	return ret;
+}
+
+bool pms7003::sensor_set_passive_mode()
+{
+	auto ret = send_host_command(constant::cmd_change_mode, constant::data_passive_mode);
+	if (ret != true) {
+		std::cout << "Passive mode set error" << std::endl;
+		return false;
+	}
+	wait_for_response_after_cmd();
+
+	return true;
 }
 
 std::optional<data_packet> pms7003::get_sensor_data() const
