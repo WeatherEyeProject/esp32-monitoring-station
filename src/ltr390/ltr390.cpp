@@ -17,6 +17,11 @@ ltr390::ltr390()
 	i2c_dev->init_bus();
 }
 
+ltr390::~ltr390()
+{
+	suspend();
+}
+
 std::string ltr390::get_name() const
 {
 	return constant::sensor_name;

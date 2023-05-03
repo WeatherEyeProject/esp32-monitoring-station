@@ -11,6 +11,7 @@ class ltr390: sensor
 {
 public:
 	ltr390();
+	~ltr390();
 
 	bool init_sensor() override;
 	bool wakeup() override;
