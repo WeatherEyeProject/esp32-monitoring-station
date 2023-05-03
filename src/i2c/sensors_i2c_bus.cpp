@@ -109,7 +109,7 @@ std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_
 	i2c_master_write_byte(cmd_handle, mem_addr, true);
 	i2c_master_start(cmd_handle);
 	i2c_master_write_byte(cmd_handle, dev_addr | 0x01, true);
-	i2c_master_read(cmd_handle, data.data(), bytes, I2C_MASTER_NACK);
+	i2c_master_read(cmd_handle, data.data(), bytes, I2C_MASTER_LAST_NACK);
 	i2c_master_stop(cmd_handle);
 
 	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout);
