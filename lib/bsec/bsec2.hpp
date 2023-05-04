@@ -39,13 +39,10 @@
 #ifndef BSEC2_H_
 #define BSEC2_H_
 
-/* Includes */
-#include "Arduino.h"
-#include "Wire.h"
-#include "SPI.h"
+#include <cstring>
 
-/* dependent library header */
-#include "bme68xLibrary.h"
+ /* dependent library header */
+#include <bme68xLibrary.hpp>
 #include "inc/bsec_datatypes.h"
 #include "inc/bsec_interface_multi.h"
 
@@ -92,24 +89,6 @@ public:
      */
     bool begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
             bme68x_delay_us_fptr_t idleTask, void *intfPtr);
-
-    /**
-     * @brief Function to initialize the sensor based on the Wire library
-     * @param i2cAddr  : The I2C address the sensor is at
-     * @param i2c      : The TwoWire object
-     * @param idleTask : Delay or Idle function
-     * @return True if everything initialized correctly
-     */
-    bool begin(uint8_t i2cAddr, TwoWire &i2c, bme68x_delay_us_fptr_t idleTask = bme68xDelayUs);
-
-    /**
-     * @brief Function to initialize the sensor based on the SPI library
-     * @param chipSelect : The chip select pin for SPI communication
-     * @param spi        : The SPIClass object
-     * @param idleTask   : Delay or Idle function
-     * @return True if everything initialized correctly
-     */
-    bool begin(uint8_t chipSelect, SPIClass &spi, bme68x_delay_us_fptr_t idleTask = bme68xDelayUs);
 
     /**
      * @brief Function that sets the desired sensors and the sample rates

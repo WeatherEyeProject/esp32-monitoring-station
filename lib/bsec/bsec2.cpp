@@ -38,6 +38,8 @@
 
 #include "bsec2.hpp"
 
+#include <esp_timer.h>
+
 static uint8_t workBuffer[BSEC_MAX_WORKBUFFER_SIZE];
 
 /**
@@ -65,32 +67,6 @@ bool Bsec2::begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t 
         bme68x_delay_us_fptr_t idleTask, void *intfPtr)
 {
     sensor.begin(intf, read, write, idleTask, intfPtr);
-
-    if (sensor.checkStatus() == BME68X_ERROR)
-        return false;
-
-    return beginCommon();
-}
-
-/**
- * @brief Function to initialize the sensor based on the Wire library
- */ 
-bool Bsec2::begin(uint8_t i2cAddr, TwoWire &i2c, bme68x_delay_us_fptr_t idleTask)
-{
-    sensor.begin(i2cAddr, i2c, idleTask);
-
-    if (sensor.checkStatus() == BME68X_ERROR)
-        return false;
-
-    return beginCommon();
-}
-
-/**
- * @brief Function to initialize the sensor based on the SPI library
- */
-bool Bsec2::begin(uint8_t chipSelect, SPIClass &spi, bme68x_delay_us_fptr_t idleTask)
-{
-    sensor.begin(chipSelect, spi, idleTask);
 
     if (sensor.checkStatus() == BME68X_ERROR)
         return false;
@@ -248,7 +224,7 @@ bool Bsec2::setConfig(const uint8_t *config)
  */
 int64_t Bsec2::getTimeMs(void)
 {
-    int64_t timeMs = millis();
+	int64_t timeMs = esp_timer_get_time() / 1000;
 
     if (lastMillis > timeMs) /* An overflow occurred */
     { 

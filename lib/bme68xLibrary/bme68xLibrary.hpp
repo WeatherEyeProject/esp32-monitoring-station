@@ -39,32 +39,13 @@
 #ifndef BME68X_LIBRARY_H
 #define BME68X_LIBRARY_H
 
-#include <string.h>
-#include "Arduino.h"
-#include "Wire.h"
-#include "SPI.h"
+#include <string>
+using String = std::string;
 
-#include "bme68x/bme68x.h"
+#include <bme68x.h>
 
 #define BME68X_ERROR            INT8_C(-1)
 #define BME68X_WARNING          INT8_C(1)
-
- /**
-  * Datatype working as an interface descriptor
-  */
-typedef union
-{
-	struct
-	{
-		TwoWire* wireobj;
-		uint8_t i2cAddr;
-	} i2c;
-	struct
-	{
-		SPIClass* spiobj;
-		uint8_t cs;
-	} spi;
-} bme68xScommT;
 
 /** Datatype to keep consistent with camel casing */
 typedef struct bme68x_data          bme68xData;
@@ -79,26 +60,6 @@ typedef struct bme68x_heatr_conf    bme68xHeatrConf;
  * @param intfPtr  : Pointer to the interface descriptor
  */
 void bme68xDelayUs(uint32_t periodUs, void* intfPtr);
-
-/**
- * @brief Function that implements the default SPI write transaction
- * @param regAddr : Register address of the sensor
- * @param regData : Pointer to the data to be written to the sensor
- * @param length   : Length of the transfer
- * @param intfPtr : Pointer to the interface descriptor
- * @return 0 if successful, non-zero otherwise
- */
-int8_t bme68xSpiWrite(uint8_t regAddr, const uint8_t* regData, uint32_t length, void* intfPtr);
-
-/**
- * @brief Function that implements the default SPI read transaction
- * @param regAddr : Register address of the sensor
- * @param regData : Pointer to the data to be read from the sensor
- * @param length   : Length of the transfer
- * @param intfPtr : Pointer to the interface descriptor
- * @return 0 if successful, non-zero otherwise
- */
-int8_t bme68xSpiRead(uint8_t regAddr, uint8_t* regData, uint32_t length, void* intfPtr);
 
 /**
  * @brief Function that implements the default I2C write transaction
@@ -141,22 +102,6 @@ public:
 	 */
 	void begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
 			   bme68x_delay_us_fptr_t idleTask, void* intfPtr);
-
-	/**
-	 * @brief Function to initialize the sensor based on the Wire library
-	 * @param i2cAddr  : The I2C address the sensor is at
-	 * @param i2c      : The TwoWire object
-	 * @param idleTask : Delay or Idle function
-	 */
-	void begin(uint8_t i2cAddr, TwoWire& i2c, bme68x_delay_us_fptr_t idleTask = bme68xDelayUs);
-
-	/**
-	 * @brief Function to initialize the sensor based on the SPI library
-	 * @param chipSelect : The chip select pin for SPI communication
-	 * @param spi        : The SPIClass object
-	 * @param idleTask   : Delay or Idle function
-	 */
-	void begin(uint8_t chipSelect, SPIClass& spi, bme68x_delay_us_fptr_t idleTask = bme68xDelayUs);
 
 	/**
 	 * @brief Function to read a register
@@ -335,7 +280,6 @@ private:
 	/** Datatype to keep consistent with camel casing
 	 * Datastructure to hold sensor settings
 	 */
-	bme68xScommT comm;
 	bme68xDev bme6;
 	bme68xConf conf;
 	bme68xHeatrConf heatrConf;
