@@ -36,7 +36,7 @@
  *
  */
 
-#include "bsec2.h"
+#include "bsec2.hpp"
 
 static uint8_t workBuffer[BSEC_MAX_WORKBUFFER_SIZE];
 
