@@ -20,6 +20,5 @@ private:
 	bool sensor_ready;
 	bool sensor_suspended;
 
-	bme68x_dev dev;
-
+	bool do_sensor_selfcheck();
 };
