@@ -66,107 +66,87 @@ bool sensors_i2c_bus::init_bus()
 	return true;
 }
 
-std::optional<uint8_t> sensors_i2c_bus::i2c_read(const uint8_t dev_addr, const uint8_t mem_addr)
-{
-	if (!bus_ready) {
-		return std::nullopt;
-	}
-
-	auto cmd_handle = i2c_cmd_link_create();
-	uint8_t data;
-
-	i2c_master_start(cmd_handle);
-	i2c_master_write_byte(cmd_handle, dev_addr, true);
-	i2c_master_write_byte(cmd_handle, mem_addr, true);
-	i2c_master_start(cmd_handle);
-	i2c_master_write_byte(cmd_handle, dev_addr | 0x01, true);
-	i2c_master_read_byte(cmd_handle, &data, I2C_MASTER_NACK);
-	i2c_master_stop(cmd_handle);
-
-	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout);
-
-	i2c_cmd_link_delete(cmd_handle);
-
-	if (ret == ESP_OK)
-		return data;
-
-	std::cout << "I2C read error!" << std::endl;
-	return std::nullopt;
-}
-
-std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t mem_addr, const uint32_t bytes)
-{
-	if (!bus_ready) {
-		return std::nullopt;
-	}
-
-	std::vector<uint8_t> data(bytes);
-
-	auto cmd_handle = i2c_cmd_link_create();
-
-	i2c_master_start(cmd_handle);
-	i2c_master_write_byte(cmd_handle, dev_addr, true);
-	i2c_master_write_byte(cmd_handle, mem_addr, true);
-	i2c_master_start(cmd_handle);
-	i2c_master_write_byte(cmd_handle, dev_addr | 0x01, true);
-	i2c_master_read(cmd_handle, data.data(), bytes, I2C_MASTER_LAST_NACK);
-	i2c_master_stop(cmd_handle);
-
-	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout);
-
-	i2c_cmd_link_delete(cmd_handle);
-
-	if (ret == ESP_OK)
-		return data;
-
-	std::cout << "I2C read error!" << std::endl;
-	return std::nullopt;
-}
-
-bool sensors_i2c_bus::i2c_write(const uint8_t dev_addr, const uint8_t mem_addr, const uint8_t data)
+bool sensors_i2c_bus::i2c_read_common(const uint8_t dev_addr, const uint8_t reg_addr, uint8_t* data, const uint32_t bytes)
 {
 	if (!bus_ready) {
 		return false;
 	}
 
 	auto cmd_handle = i2c_cmd_link_create();
-
 	i2c_master_start(cmd_handle);
 	i2c_master_write_byte(cmd_handle, dev_addr, true);
-	i2c_master_write_byte(cmd_handle, mem_addr, true);
-	i2c_master_write_byte(cmd_handle, data, true);
+	i2c_master_write_byte(cmd_handle, reg_addr, true);
+	i2c_master_start(cmd_handle);
+	i2c_master_write_byte(cmd_handle, dev_addr | 0x01, true);
+	i2c_master_read(cmd_handle, data, bytes, I2C_MASTER_LAST_NACK);
 	i2c_master_stop(cmd_handle);
-
-	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout) == ESP_OK;
-
+	auto esp_rslt = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout);
 	i2c_cmd_link_delete(cmd_handle);
 
+	auto ret = esp_rslt == ESP_OK;
 	if (!ret) {
-		std::cout << "I2C write error!" << std::endl;
+		std::cout << "I2C read error: " << std::to_string(esp_rslt) << std::endl;
 	}
+
 	return ret;
 }
 
-bool sensors_i2c_bus::i2c_write_bytes(const uint8_t dev_addr, const uint8_t mem_addr, const uint8_t* data, const uint32_t bytes)
+bool sensors_i2c_bus::i2c_write_common(const uint8_t dev_addr, const uint8_t reg_addr, const uint8_t* data, const uint32_t bytes)
 {
 	if (!bus_ready) {
 		return false;
 	}
 
 	auto cmd_handle = i2c_cmd_link_create();
-
 	i2c_master_start(cmd_handle);
 	i2c_master_write_byte(cmd_handle, dev_addr, true);
-	i2c_master_write_byte(cmd_handle, mem_addr, true);
+	i2c_master_write_byte(cmd_handle, reg_addr, true);
 	i2c_master_write(cmd_handle, data, bytes, true);
 	i2c_master_stop(cmd_handle);
-
-	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout) == ESP_OK;
-
+	auto esp_rslt = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout);
 	i2c_cmd_link_delete(cmd_handle);
 
+	auto ret = esp_rslt == ESP_OK;
 	if (!ret) {
-		std::cout << "I2C write error!" << std::endl;
+		std::cout << "I2C write error: " << std::to_string(esp_rslt) << std::endl;
 	}
+
 	return ret;
+}
+
+std::optional<uint8_t> sensors_i2c_bus::i2c_read(const uint8_t dev_addr, const uint8_t reg_addr)
+{
+	uint8_t data;
+	auto ret = i2c_read_common(dev_addr, reg_addr, &data, 1);
+
+	if (!ret)
+		return std::nullopt;
+
+	return data;
+}
+
+std::optional<std::vector<uint8_t>> sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t reg_addr, const uint32_t bytes)
+{
+	std::vector<uint8_t> data(bytes);
+	auto ret = i2c_read_common(dev_addr, reg_addr, data.data(), bytes);
+
+	if (!ret)
+		return std::nullopt;
+
+	return data;
+}
+
+bool sensors_i2c_bus::i2c_read_bytes(const uint8_t dev_addr, const uint8_t reg_addr, uint8_t* data, const uint32_t bytes)
+{
+	return i2c_read_common(dev_addr, reg_addr, data, bytes);
+}
+
+bool sensors_i2c_bus::i2c_write(const uint8_t dev_addr, const uint8_t reg_addr, const uint8_t data)
+{
+	return i2c_write_common(dev_addr, reg_addr, &data, 1);
+}
+
+bool sensors_i2c_bus::i2c_write_bytes(const uint8_t dev_addr, const uint8_t reg_addr, const uint8_t* data, const uint32_t bytes)
+{
+	return i2c_write_common(dev_addr, reg_addr, data, bytes);
 }
