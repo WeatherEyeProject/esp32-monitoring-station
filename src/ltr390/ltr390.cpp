@@ -117,12 +117,13 @@ std::optional<uint32_t> ltr390::get_meas_from_sensor(const uint8_t sensor_mode, 
 	// Data is stored in three registers from LSB to MSB
 	// Shift data to uin32_t starting from 3'rd byte
 	uint32_t data = 0;
-	for (uint8_t reg = first_data_reg; reg < first_data_reg + 3; reg++) {
-		auto reg_data = i2c_read(reg);
-		if (!reg_data)
-			return std::nullopt;
+	auto reg_data = i2c_read(first_data_reg, 3);
+	if (!reg_data)
+		return std::nullopt;
+
+	for (auto byte : *reg_data) {
 		data >>= 8;
-		data |= *reg_data << 16;
+		data |= byte << 16;
 	}
 
 	return data;
