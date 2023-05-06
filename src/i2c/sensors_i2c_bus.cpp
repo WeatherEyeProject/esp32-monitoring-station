@@ -157,10 +157,8 @@ bool sensors_i2c_bus::i2c_write_bytes(const uint8_t dev_addr, const uint8_t mem_
 
 	i2c_master_start(cmd_handle);
 	i2c_master_write_byte(cmd_handle, dev_addr, true);
-	for (uint32_t i = 0; i < bytes; i++) {
-		i2c_master_write_byte(cmd_handle, mem_addr + i, true);
-		i2c_master_write_byte(cmd_handle, data[i], true);
-	}
+	i2c_master_write_byte(cmd_handle, mem_addr, true);
+	i2c_master_write(cmd_handle, data, bytes, true);
 	i2c_master_stop(cmd_handle);
 
 	auto ret = i2c_master_cmd_begin(constant::i2c_port_num, cmd_handle, constant::ticks_timeout) == ESP_OK;
