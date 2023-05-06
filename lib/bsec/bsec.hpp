@@ -40,12 +40,9 @@
 #define BSEC_CLASS_H
 
 /* Includes */
-#include "Arduino.h"
-#include "Wire.h"
-#include "SPI.h"
 #include "inc/bsec_datatypes.h"
 #include "inc/bsec_interface.h"
-#include "bme68x/bme68x.h"
+#include <bme68x.h>
 
 #define BME68X_ERROR            INT8_C(-1)
 #define BME68X_WARNING          INT8_C(1)
@@ -63,11 +60,8 @@ public:
 	      staticIaq, co2Equivalent, breathVocEquivalent, compGasValue, gasPercentage;
 	uint8_t iaqAccuracy, staticIaqAccuracy, co2Accuracy, breathVocAccuracy, compGasAccuracy, gasPercentageAccuracy;
 	int64_t outputTimestamp;	// Timestamp in ms of the output
-	static TwoWire *wireObj;
-	static SPIClass *spiObj;
 	struct bme68x_conf conf;
 	struct bme68x_heatr_conf heatrConf;
-
 
 	/* Public APIs */
 	/**
@@ -84,20 +78,6 @@ public:
      * @param intfPtr 	: Pointer to the interface descriptor
 	 */
 	void begin(bme68x_intf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write, bme68x_delay_us_fptr_t idleTask, void *intfPtr);
-	
-	/**
-	 * @brief Function to initialize the BSEC library and the BME68x sensor
-	 * @param i2cAddr	: I2C address
-	 * @param i2c		: Pointer to the TwoWire object
-	 */
-	void begin(uint8_t i2cAddr, TwoWire &i2c);
-	
-	/**
-	 * @brief Function to initialize the BSEC library and the BME68x sensor
-	 * @param chipSelect	: SPI chip select
-	 * @param spi			: Pointer to the SPIClass object
-	 */
-	void begin(uint8_t chipSelect, SPIClass &spi);
 
 	/**
 	 * @brief Function that sets the desired sensors and the sample rates
@@ -139,59 +119,18 @@ public:
 	{
 		_tempOffset = tempOffset;
 	}
-	
-		
+
 	/**
 	 * @brief Function to calculate an int64_t timestamp in milliseconds
 	 */
 	int64_t getTimeMs(void);
-	
+
 	/**
 	* @brief Task that delays for a ms period of time
 	* @param period	: Period of time in us
 	* @param intfPtr: Pointer to the interface descriptor
 	*/
-	static void delay_us(uint32_t period, void *intfPtr);
-
-	/**
-	* @brief Callback function for reading registers over I2C
-	* @param regAddr : Register address of the sensor
-	* @param regData : Pointer to the data to be written to the sensor
-	* @param length   : Length of the transfer
-	* @param intfPtr : Pointer to the interface descriptor
-	* @return	Zero for success, non-zero otherwise
-	*/
-	static int8_t i2cRead(uint8_t regAddr, uint8_t *regData, uint32_t length, void *intfPtr);
-
-	/**
-	* @brief Callback function for writing registers over I2C
-	* @param regAddr : Register address of the sensor
-	* @param regData : Pointer to the data to be written to the sensor
-	* @param length   : Length of the transfer
-	* @param intfPtr : Pointer to the interface descriptor
-	* @return	Zero for success, non-zero otherwise
-	*/
-	static int8_t i2cWrite(uint8_t regAddr, const uint8_t *regData, uint32_t length, void *intfPtr);
-
-	/**
-	 * @brief Function that implements the default SPI read transaction
-	 * @param regAddr : Register address of the sensor
-	 * @param regData : Pointer to the data to be read from the sensor
-	 * @param length   : Length of the transfer
-	 * @param intfPtr : Pointer to the interface descriptor
-	 * @return 0 if successful, non-zero otherwise
-	 */
-	static int8_t spiRead(uint8_t regAddr, uint8_t *regData, uint32_t length, void *intfPtr);
-
-	/**
-	 * @brief Function that implements the default SPI write transaction
-	 * @param regAddr : Register address of the sensor
-	 * @param regData : Pointer to the data to be written to the sensor
-	 * @param length   : Length of the transfer
-	 * @param intfPtr : Pointer to the interface descriptor
-	 * @return 0 if successful, non-zero otherwise
-	 */
-	static int8_t spiWrite(uint8_t regAddr, const uint8_t *regData, uint32_t length, void *intfPtr);
+	void delay_us(uint32_t period, void* intfPtr);
 
 	/**
      * @brief Function to set the Temperature, Pressure and Humidity over-sampling.

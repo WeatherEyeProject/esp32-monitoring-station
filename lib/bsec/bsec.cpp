@@ -36,12 +36,11 @@
  *  
  */
 
-#include "bsec.h"
+#include "bsec.hpp"
 
-TwoWire* Bsec::wireObj = NULL;
-SPIClass* Bsec::spiObj = NULL;
+#include <esp_timer.h>
 
-/**
+ /**
  * @brief Constructor
  */
 Bsec::Bsec()
@@ -63,43 +62,6 @@ void Bsec::begin(bme68x_intf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t 
 	_bme68x.amb_temp = 25;
 
 	beginCommon();
-}
-
-/**
- * @brief Function to initialize the BSEC library and the BME68x sensor
- */
-void Bsec::begin(uint8_t i2cAddr, TwoWire &i2c)
-{
-	_bme68x.intf_ptr = (void*)(intptr_t)i2cAddr;
-	_bme68x.intf = BME68X_I2C_INTF;
-	_bme68x.read = Bsec::i2cRead;
-	_bme68x.write = Bsec::i2cWrite;
-	_bme68x.delay_us = Bsec::delay_us;
-	_bme68x.amb_temp = 25;
-
-	Bsec::wireObj = &i2c;
-	Bsec::wireObj->begin();
-	beginCommon();
-}
-
-/**
- * @brief Function to initialize the BSEC library and the BME68X sensor with SPI communication setting
- */
-void Bsec::begin(uint8_t chipSelect, SPIClass &spi)
-{
-	_bme68x.intf_ptr = (void*)(intptr_t)chipSelect;
-	_bme68x.intf = BME68X_SPI_INTF;
-	_bme68x.read = Bsec::spiRead;
-	_bme68x.write = Bsec::spiWrite;
-	_bme68x.delay_us = Bsec::delay_us;
-	_bme68x.amb_temp = 25;	
-
-	pinMode(chipSelect, OUTPUT);
-	digitalWrite(chipSelect, HIGH);
-	Bsec::spiObj = &spi;
-	Bsec::spiObj->begin();
-
-	return beginCommon();
 }
 
 /**
@@ -454,7 +416,7 @@ void Bsec::zeroInputs(void)
  */
 int64_t Bsec::getTimeMs(void)
 {
-	int64_t timeMs = millis();
+	int64_t timeMs = esp_timer_get_time() / 1000;
 
 	if (lastTime > timeMs) { // An overflow occurred
 		millisOverflowCounter++;
@@ -470,101 +432,7 @@ int64_t Bsec::getTimeMs(void)
  */
 void Bsec::delay_us(uint32_t period, void *intfPtr)
 {
-	(void) intfPtr;
-	// Wait for a period amount of ms
-	// The system may simply idle, sleep or even perform background tasks
-	delay(period/1000);
-}
-
-/**
- @brief Callback function for reading registers over I2C
- */
-int8_t Bsec::i2cRead(uint8_t regAddr, uint8_t *regData, uint32_t length, void *intf_ptr)
-{
-	intptr_t devId = (intptr_t)intf_ptr;
-	int8_t rslt = 0;
-	if(Bsec::wireObj) {
-		Bsec::wireObj->beginTransmission(devId);
-		Bsec::wireObj->write(regAddr);
-		rslt = Bsec::wireObj->endTransmission();
-		Bsec::wireObj->requestFrom((int) devId, (int) length);
-		for (auto i = 0; (i < length) && Bsec::wireObj->available(); i++) {
-			regData[i] = Bsec::wireObj->read();
-		}
-	} else {
-		rslt = -1;
-	}
-	return rslt;
-}
-
-/**
- * @brief Callback function for writing registers over I2C
- */
-int8_t Bsec::i2cWrite(uint8_t regAddr, const uint8_t *regData, uint32_t length, void *intf_ptr)
-{
-	intptr_t devId = (intptr_t)intf_ptr;
-	int8_t rslt = 0;
-	if(Bsec::wireObj) {
-		Bsec::wireObj->beginTransmission(devId);
-		Bsec::wireObj->write(regAddr);
-		for (auto i = 0; i < length; i++) {
-			Bsec::wireObj->write(regData[i]);
-		}
-		rslt = Bsec::wireObj->endTransmission();
-	} else {
-		rslt = -1;
-	}
-	return rslt;
-}
-
-/**
- * @brief Callback function for reading over SPI
- */
-int8_t Bsec::spiRead(uint8_t regAddr, uint8_t *regData, uint32_t length, void *intf_ptr)
-{
-	intptr_t devId = (intptr_t)intf_ptr;
-	int8_t rslt = 0;
-	if(Bsec::spiObj) {
-		Bsec::spiObj->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0)); // Can be up to 10MHz
-
-		digitalWrite(devId, LOW);
-
-		Bsec::spiObj->transfer(regAddr); // Write the register address, ignore the return
-		for (auto i = 0; i < length; i++)
-			regData[i] = Bsec::spiObj->transfer(regData[i]);
-
-		digitalWrite(devId, HIGH);
-		Bsec::spiObj->endTransaction();
-	} else {
-		rslt = -1;
-	}
-
-	return rslt;
-}
-
-/**
- * @brief Callback function for writing registers over SPI
- */
-int8_t Bsec::spiWrite(uint8_t regAddr, const uint8_t *regData, uint32_t length, void *intf_ptr)
-{
-	intptr_t devId = (intptr_t)intf_ptr;
-	int8_t rslt = 0;
-	if(Bsec::spiObj) {
-		Bsec::spiObj->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0)); // Can be up to 10MHz
-
-		digitalWrite(devId, LOW);
-
-		Bsec::spiObj->transfer(regAddr); // Write the register address, ignore the return
-		for (auto i = 0; i < length; i++)
-			Bsec::spiObj->transfer(regData[i]);
-
-		digitalWrite(devId, HIGH);
-		Bsec::spiObj->endTransaction();
-	} else {
-		rslt = -1;
-	}
-
-	return rslt;
+	_bme68x.delay_us(period, intfPtr);
 }
 
 /**
