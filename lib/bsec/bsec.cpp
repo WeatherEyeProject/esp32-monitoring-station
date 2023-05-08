@@ -82,7 +82,7 @@ void Bsec::beginCommon(void)
 /**
  * @brief Function that sets the desired sensors and the sample rates
  */
-void Bsec::updateSubscription(bsec_virtual_sensor_t sensorList[], uint8_t nSensors, float sampleRate)
+void Bsec::updateSubscription(const bsec_virtual_sensor_t sensorList[], uint8_t nSensors, float sampleRate)
 {
 	bsec_sensor_configuration_t virtualSensors[BSEC_NUMBER_OUTPUTS],
 	        sensorSettings[BSEC_MAX_PHYSICAL_SENSOR];

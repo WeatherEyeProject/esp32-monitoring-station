@@ -85,7 +85,7 @@ public:
 	 * @param nSensors		: Number of outputs requested
 	 * @param sampleRate	: The sample rate of requested sensors
 	 */
-	void updateSubscription(bsec_virtual_sensor_t sensorList[], uint8_t nSensors, float sampleRate = BSEC_SAMPLE_RATE_ULP);
+	void updateSubscription(const bsec_virtual_sensor_t sensorList[], uint8_t nSensors, float sampleRate = BSEC_SAMPLE_RATE_ULP);
 
 	/**
 	 * @brief Callback from the user to trigger reading of data from the BME68x, process and store outputs

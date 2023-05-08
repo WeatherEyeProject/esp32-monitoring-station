@@ -28,14 +28,14 @@ struct type_info {
 static std::map<type, type_info> type_info_map = {
 	{type::TEMPERATURE, {"°C", "temperature", 1}},
 	{type::HUMIDITY, {"%", "humidity", 2}},
-	{type::PRESSURE, {"Pa", "pressure", 3}},
-	{type::AIR_QUALITY_IAQ, {"IAQ", "air quality", 4}},
+	{type::PRESSURE, {"hPa", "pressure", 3}},
+	{type::AIR_QUALITY_IAQ, {" IAQ", "air quality", 4}},
 	{type::LIGHT_ALS, {"lux", "light", 5}},
 	{type::LIGHT_UV, {"uvi", "UV light", 6}},
 	{type::AIR_PM_10, {"µg/m3", "PM10", 7}},
 	{type::AIR_PM_2_5, {"µg/m3", "PM2.5", 8}},
 	{type::AIR_PM_1, {"µg/m3", "PM1", 9}},
 	{type::RAIN_DISCRETE, {"", "rain detected", 10}},
-	{type::RAIN_VALUE, {"??", "rain intensity", 11}},
+	{type::RAIN_VALUE, {"", "rain intensity", 11}},
 };
 }
