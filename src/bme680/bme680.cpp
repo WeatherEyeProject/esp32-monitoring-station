@@ -58,7 +58,7 @@ void bme680::learning_func()
 {
 	std::unique_lock lock(sensor_meas_mtx);
 
-#ifdef DO_SENSOR_SELFCHECK
+#if DO_SENSOR_SELFCHECK
 	// Sensor gets warm after selfcheck, wait a bit
 	std::this_thread::sleep_for(constant::slow_sampling_interval);
 #endif
@@ -77,7 +77,7 @@ void bme680::learning_func()
 
 bool bme680::init_sensor()
 {
-#ifdef DO_SENSOR_SELFCHECK
+#if DO_SENSOR_SELFCHECK
 	if (!do_sensor_selfcheck())
 		return false;
 #endif
@@ -100,6 +100,9 @@ bool bme680::init_sensor()
 	ret = check_sensor_status();
 	if (!ret)
 		return false;
+
+	sensor_ready = true;
+	sensor_suspended = true;
 
 	learning_thread = std::thread([&] {
 		learning_func();
@@ -124,13 +127,13 @@ bool bme680::do_sensor_selfcheck()
 
 sensor_data_list bme680::read_data()
 {
-	if (sensor_suspended)
+	if (!sensor_ready || sensor_suspended)
 		return {};
 
 	std::lock_guard lock(sensor_meas_mtx);
 	// Always wait for fresh data
 	if (bsec.nextCall > bsec.getTimeMs()) {
-		bsec.delay_us(bsec.nextCall - bsec.getTimeMs(), nullptr);
+		bsec.delay_us((bsec.nextCall - bsec.getTimeMs()) * 1000, nullptr);
 	}
 	auto run = bsec.run();
 	if (!run) {
@@ -159,6 +162,9 @@ sensor_data_list bme680::read_data()
 
 bool bme680::suspend()
 {
+	if (!sensor_ready)
+		return false;
+
 	if (sensor_suspended)
 		return true;
 
@@ -170,6 +176,9 @@ bool bme680::suspend()
 
 bool bme680::wakeup()
 {
+	if (!sensor_ready)
+		return false;
+
 	if (!sensor_suspended)
 		return true;
 
