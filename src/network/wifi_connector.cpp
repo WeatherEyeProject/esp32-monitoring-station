@@ -10,7 +10,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 
-#include <storage/storage.hpp>
+#include <storage/esp_nvs.hpp>
 
 namespace constant
 {
@@ -54,7 +54,7 @@ void wifi_connector::event_handler(void* arg, esp_event_base_t event_base,
 
 bool wifi_connector::init_wifi()
 {
-	if (!storage::init_nvs()) {
+	if (!esp_nvs::init_nvs()) {
 		return false;
 	}
 

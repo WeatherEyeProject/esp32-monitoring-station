@@ -1,6 +1,6 @@
 #pragma once
 
-class storage {
+class esp_nvs {
 public:
 	static bool init_nvs();
 

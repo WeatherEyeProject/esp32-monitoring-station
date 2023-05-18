@@ -1,10 +1,10 @@
-#include "storage.hpp"
+#include "esp_nvs.hpp"
 
 #include "nvs_flash.h"
 
-bool storage::nvs_initialized = false;
+bool esp_nvs::nvs_initialized = false;
 
-bool storage::init_nvs()
+bool esp_nvs::init_nvs()
 {
 	if (nvs_initialized)
 		return true;
