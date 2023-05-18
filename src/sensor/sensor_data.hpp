@@ -1,7 +1,6 @@
 #pragma once
 
 #include <list>
-//#include <memory>
 
 #include "env_data_type.hpp"
 
@@ -34,11 +33,10 @@ public:
 		return environmental_data::type_info_map.at(type).unit;
 	}
 
-	uint8_t get_id() const
+	std::string get_id() const
 	{
 		return environmental_data::type_info_map.at(type).id;
 	}
 };
 
-//using sensor_data_ptr = std::shared_ptr<sensor_data>;
 using sensor_data_list = std::list<sensor_data>;
