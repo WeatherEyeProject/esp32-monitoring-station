@@ -204,8 +204,9 @@ bool ltr390::set_sensor_gain(uint8_t new_gain)
 std::optional<float> ltr390::get_calculated_lux_from_sensor()
 {
 	std::optional<uint32_t> als;
+	int8_t cur_gain = constant::gain::range_18;
 
-	for (uint8_t cur_gain = constant::gain::range_18; cur_gain >= constant::gain::range_1; cur_gain--) {
+	while (cur_gain >= constant::gain::range_1) {
 		set_sensor_gain(cur_gain);
 
 		als = get_meas_from_sensor(constant::modes::als, constant::address::als_data_lsb);
@@ -217,7 +218,7 @@ std::optional<float> ltr390::get_calculated_lux_from_sensor()
 			break;
 		}
 
-		std::cout << "Sensor out of range, lowering gain..." << std::endl;
+		cur_gain--;
 	}
 
 	auto lux = calculate_lux_from_raw(*als);
