@@ -9,7 +9,7 @@
 
 #include "pms7003_defs.hpp"
 
-class pms7003 : sensor
+class pms7003 : public sensor
 {
 public:
 	pms7003();

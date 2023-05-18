@@ -7,7 +7,7 @@
 #include <thread>
 #include <mutex>
 
-class bme680 : sensor {
+class bme680 : public sensor {
 public:
     bme680();
 	~bme680();

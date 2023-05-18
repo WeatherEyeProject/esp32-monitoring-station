@@ -7,7 +7,7 @@
 
 #include "ltr390_defs.hpp"
 
-class ltr390: sensor
+class ltr390 : public sensor
 {
 public:
 	ltr390();
