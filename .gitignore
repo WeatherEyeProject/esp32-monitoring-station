@@ -1,3 +1,4 @@
 .pio
 .vscode
 src/network/known_wifi_networks.txt
+src/crypt/secret_hmac_key.txt
