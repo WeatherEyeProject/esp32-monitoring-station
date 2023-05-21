@@ -1,11 +1,14 @@
 #pragma once
 
+#include <mutex>
+#include <thread>
+
 #include <bme68x.h>
 #include <bsec.hpp>
-#include <sensor/sensor.hpp>
+
 #include <i2c/sensors_i2c_bus.hpp>
-#include <thread>
-#include <mutex>
+#include <sensor/sensor.hpp>
+#include <storage/bsec_data.hpp>
 
 class bme680 : public sensor {
 public:
@@ -25,6 +28,9 @@ private:
 	bool enable_learning_func;
 
 	Bsec bsec;
+	bsec_data bsec_storage;
+
+	uint32_t next_learning_state_save;
 
 	std::thread learning_thread;
 	std::mutex sensor_meas_mtx;
@@ -32,4 +38,6 @@ private:
 	bool do_sensor_selfcheck();
 	bool check_sensor_status();
 	void learning_func();
+
+	bool save_bsec_state();
 };

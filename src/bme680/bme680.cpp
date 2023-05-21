@@ -7,6 +7,7 @@
 #include <freertos/task.h>
 
 #include <config/bsec_configs.hpp>
+#include <log.h>
 
 #include "sensor_api_glue.h"
 
@@ -20,6 +21,7 @@ const uint8_t sensor_addr = BME68X_I2C_ADDR_LOW << 1;
 const uint8_t iaq_medium_accuracy = 2;
 const std::chrono::seconds fast_sampling_interval(3);
 const std::chrono::seconds slow_sampling_interval(30);
+const uint32_t learning_state_save_interval_ms = 3 * 24 * 60 * 60 * 1000; // 3 days
 
 const bsec_virtual_sensor_t sensor_list[] = {
 	BSEC_OUTPUT_IAQ,
@@ -35,7 +37,8 @@ const size_t sensor_list_size = sizeof(sensor_list) / sizeof(bsec_virtual_sensor
 bme680::bme680()
 	: i2c_dev(sensors_i2c_bus::get_instance()),
 	sensor_ready(false),
-	enable_learning_func(true)
+	enable_learning_func(true),
+	next_learning_state_save(0)
 {
 	i2c_dev->init_bus();
 }
@@ -63,6 +66,8 @@ void bme680::learning_func()
 	std::this_thread::sleep_for(constant::slow_sampling_interval);
 #endif
 
+	next_learning_state_save = bsec.getTimeMs() + constant::learning_state_save_interval_ms;
+
 	while (enable_learning_func) {
 		bsec.run();
 
@@ -71,6 +76,21 @@ void bme680::learning_func()
 			bsec.iaqAccuracy < constant::iaq_medium_accuracy;
 		std::this_thread::sleep_for(enable_fast_sampling ?
 									constant::fast_sampling_interval : constant::slow_sampling_interval);
+
+		if (bsec.iaqAccuracy >= constant::iaq_medium_accuracy &&
+			bsec.getTimeMs() > next_learning_state_save) {
+			std::vector<uint8_t> data(BSEC_MAX_STATE_BLOB_SIZE);
+
+			bsec.getState(data.data());
+
+			logi(__func__, "Saving bsec learning state to NVS");
+			if (!bsec_storage.save_learned_state(data)) {
+				loge(__func__, "Saving NVS error, reinit storage");
+				bsec_storage.erase_partition();
+			}
+
+			next_learning_state_save = bsec.getTimeMs() + constant::learning_state_save_interval_ms;
+		}
 		lock.lock();
 	}
 }
@@ -100,6 +120,24 @@ bool bme680::init_sensor()
 	ret = check_sensor_status();
 	if (!ret)
 		return false;
+
+	if (!bsec_storage.init_partition()) {
+		return false;
+	}
+
+	if (bsec_storage.get_state_version() != 0) {
+		auto data = bsec_storage.get_learned_state();
+		if (data.size() == 0) {
+			logi(__func__, "Empty learned state read, do erase");
+			if (!bsec_storage.erase_partition()) {
+				return false;
+			}
+		}
+		else {
+			logi(__func__, "Loading learned stare, rev: %d", bsec_storage.get_state_version());
+			bsec.setState(data.data());
+		}
+	}
 
 	sensor_ready = true;
 	sensor_suspended = true;
