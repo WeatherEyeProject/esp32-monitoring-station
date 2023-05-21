@@ -15,7 +15,7 @@
 namespace constant
 {
 const char station_hostname[] = "WeatherEyeStation";
-const uint8_t scan_retries = 5;
+const uint8_t scan_retries = 7;
 const std::unordered_map<std::string, std::string> known_networks = {
 	#include "known_wifi_networks.txt"
 };
@@ -123,6 +123,10 @@ bool wifi_connector::try_connect()
 		return true;
 	}
 
+	if (wifi_con_retries != constant::scan_retries) {
+		return false;
+	}
+
 	return connect_to_known_ap();
 }
 
@@ -208,6 +212,8 @@ bool wifi_connector::connect_to_known_ap()
 	if (ret != ESP_OK) {
 		return false;
 	}
+
+	wifi_con_retries = 0;
 
 	return true;
 }
