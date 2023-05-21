@@ -6,6 +6,8 @@
 
 class bsec_data {
 public:
+	~bsec_data();
+
 	bool init_partition();
 
 	uint16_t get_state_version();

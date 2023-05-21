@@ -11,6 +11,11 @@ const char namespace_name[] = "bsec";
 const size_t learning_state_size = 155;
 }
 
+bsec_data::~bsec_data()
+{
+	nvs_flash_deinit_partition(constant::partition_name);
+}
+
 bool bsec_data::init_partition()
 {
 	auto ret = nvs_flash_init_partition(constant::partition_name);
