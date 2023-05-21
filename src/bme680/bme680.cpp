@@ -132,8 +132,10 @@ sensor_data_list bme680::read_data()
 
 	std::lock_guard lock(sensor_meas_mtx);
 	// Always wait for fresh data
-	if (bsec.nextCall > bsec.getTimeMs()) {
-		bsec.delay_us((bsec.nextCall - bsec.getTimeMs()) * 1000, nullptr);
+	auto cur_time = bsec.getTimeMs();
+	while (bsec.nextCall > cur_time) {
+		bsec.delay_us((bsec.nextCall - cur_time) * 1000, nullptr);
+		cur_time = bsec.getTimeMs();
 	}
 	auto run = bsec.run();
 	if (!run) {
