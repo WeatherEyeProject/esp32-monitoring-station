@@ -28,7 +28,7 @@ struct type_info {
 static std::map<type, type_info> type_info_map = {
 	{type::TEMPERATURE, {"°C", "temperature", "s1"}},
 	{type::HUMIDITY, {"%", "humidity", "s2"}},
-	{type::PRESSURE, {"hPa", "pressure"," s3"}},
+	{type::PRESSURE, {"hPa", "pressure", "s3"}},
 	{type::AIR_QUALITY_IAQ, {" IAQ", "air quality", "s4"}},
 	{type::LIGHT_ALS, {"lux", "light", "s5"}},
 	{type::LIGHT_UV, {"uvi", "UV light", "s6"}},
