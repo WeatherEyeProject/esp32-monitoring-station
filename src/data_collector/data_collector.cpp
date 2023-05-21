@@ -26,7 +26,7 @@ void data_collector::add_new_data(sensor_data_list data)
 
 bool data_collector::is_empty()
 {
-	return collected_data.size() == 0;
+	return collected_data.size() == 0 && tmp_packet.size() == 0;
 }
 
 std::vector<char> data_collector::get_json_data_packet(const size_t max_count)
