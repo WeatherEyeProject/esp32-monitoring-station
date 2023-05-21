@@ -9,7 +9,7 @@
 
 namespace constant
 {
-const char status_url[] = "http://weathereye.pl/api/SensorsDataGatherer";
+const char status_url[] = "https://weathereye.pl/api/SensorsDataGatherer";
 }
 
 bool packet_uploader::upload_data(std::vector<char> data)
