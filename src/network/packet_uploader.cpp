@@ -23,6 +23,8 @@ bool packet_uploader::upload_data(std::vector<char> data)
 	config.url = constant::status_url;
 	config.cert_pem = isrg_root_x1_cert;
 	config.method = HTTP_METHOD_POST;
+	config.disable_auto_redirect = true;
+	config.timeout_ms = 2000;
 
 	auto client = esp_http_client_init(&config);
 
