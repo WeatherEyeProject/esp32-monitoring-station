@@ -35,7 +35,7 @@ bool packet_uploader::upload_data(std::vector<char> data)
 		ret = false;
 		goto out;
 	}
-	err = esp_http_client_set_header(client, "Signature", signature.data());
+	err = esp_http_client_set_header(client, "Authorization", signature.data());
 	if (err != ESP_OK) {
 		ret = false;
 		goto out;
